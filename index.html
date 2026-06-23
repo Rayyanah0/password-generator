@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Password Generator</title>
+
+<style>
+    body{
+        font-family: Arial, sans-serif;
+        background:#f4f4f4;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        height:100vh;
+    }
+
+    .container{
+        background:white;
+        padding:25px;
+        border-radius:10px;
+        box-shadow:0 0 10px rgba(0,0,0,0.2);
+        width:400px;
+    }
+
+    h2{
+        text-align:center;
+        margin-bottom:20px;
+    }
+
+    .option{
+        margin:10px 0;
+    }
+
+    #password{
+        width:100%;
+        padding:10px;
+        font-size:16px;
+        margin-top:10px;
+        box-sizing:border-box;
+    }
+
+    button{
+        padding:10px 15px;
+        margin-top:10px;
+        cursor:pointer;
+        border:none;
+        border-radius:5px;
+        background:#007bff;
+        color:white;
+    }
+
+    button:hover{
+        background:#0056b3;
+    }
+
+    .button-group{
+        display:flex;
+        gap:10px;
+    }
+
+    #strength{
+        margin-top:15px;
+        font-weight:bold;
+    }
+
+    .weak{
+        color:red;
+    }
+
+    .medium{
+        color:orange;
+    }
+
+    .strong{
+        color:green;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Password Generator</h2>
+
+    <div class="option">
+        <label>Password Length: <span id="lengthValue">12</span></label>
+        <input type="range" id="length" min="8" max="32" value="12">
+    </div>
+
+    <div class="option">
+        <input type="checkbox" id="uppercase">
+        <label for="uppercase">Include Uppercase</label>
+    </div>
+
+    <div class="option">
+        <input type="checkbox" id="numbers">
+        <label for="numbers">Include Numbers</label>
+    </div>
+
+    <div class="option">
+        <input type="checkbox" id="symbols">
+        <label for="symbols">Include Symbols</label>
+    </div>
+
+    <div class="button-group">
+        <button onclick="generatePassword()">Generate</button>
+        <button onclick="copyPassword()">Copy</button>
+    </div>
+
+    <input type="text" id="password" readonly placeholder="Generated password">
+
+    <div id="strength">Strength: -</div>
+</div>
+
+<script>
+const lengthSlider = document.getElementById("length");
+const lengthValue = document.getElementById("lengthValue");
+
+lengthSlider.addEventListener("input", () => {
+    lengthValue.textContent = lengthSlider.value;
+});
+
+function generatePassword() {
+    const length = parseInt(lengthSlider.value);
+
+    let chars = "abcdefghijklmnopqrstuvwxyz";
+
+    const includeUppercase =
+        document.getElementById("uppercase").checked;
+    const includeNumbers =
+        document.getElementById("numbers").checked;
+    const includeSymbols =
+        document.getElementById("symbols").checked;
+
+    if (includeUppercase) {
+        chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    }
+
+    if (includeNumbers) {
+        chars += "0123456789";
+    }
+
+    if (includeSymbols) {
+        chars += "!@#$%^&*()_+-=[]{}|;:,.<>?";
+    }
+
+    let password = "";
+
+    const randomValues = new Uint32Array(length);
+    crypto.getRandomValues(randomValues);
+
+    for (let i = 0; i < length; i++) {
+        password += chars[randomValues[i] % chars.length];
+    }
+
+    document.getElementById("password").value = password;
+
+    checkStrength(
+        length,
+        includeUppercase,
+        includeNumbers,
+        includeSymbols
+    );
+}
+
+function checkStrength(length, upper, nums, symbols) {
+    let score = 0;
+
+    if (length >= 12) score++;
+    if (length >= 20) score++;
+
+    if (upper) score++;
+    if (nums) score++;
+    if (symbols) score++;
+
+    const strength = document.getElementById("strength");
+
+    if (score <= 2) {
+        strength.textContent = "Strength: Weak";
+        strength.className = "weak";
+    }
+    else if (score <= 4) {
+        strength.textContent = "Strength: Medium";
+        strength.className = "medium";
+    }
+    else {
+        strength.textContent = "Strength: Strong";
+        strength.className = "strong";
+    }
+}
+
+function copyPassword() {
+    const passwordField =
+        document.getElementById("password");
+
+    if (!passwordField.value) {
+        alert("Generate a password first.");
+        return;
+    }
+
+    navigator.clipboard.writeText(passwordField.value);
+
+    alert("Password copied to clipboard!");
+}
+</script>
+
+</body>
+</html>
